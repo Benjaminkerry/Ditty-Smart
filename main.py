@@ -4,10 +4,8 @@
 import RPi.GPIO as GPIO # import the GPIO library
 import os # import the os library
 import MySQLdb as mariadb # import mysql MariaDB library
-import smtplib # import SMTP for Email sending.
 from time import sleep # import sleep from time library
 alarm = 0 # alarm setmode
-partarm = 0 # alarm partarm setmode
 ac = 0 # alarm state
 ab = 0 # door sensor state
 ad = 0 # kitchen pir state
@@ -74,12 +72,12 @@ walktime = 20 # walk timer reset
 panel = 0
 modeset = 0
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(7, GPIO.IN) # Kitchen PIR
-GPIO.setup(1, GPIO.IN) # Door PIR
-GPIO.setup(8, GPIO.IN) # Living room PIR
+GPIO.setup(7, GPIO.IN) # Zone2
+GPIO.setup(1, GPIO.IN) # Zone1
+GPIO.setup(8, GPIO.IN) # Zone3
 GPIO.setup(25, GPIO.IN) # Tamper
-GPIO.setup(24, GPIO.IN) # Bedroom PIR
-GPIO.setup(23, GPIO.IN) # ManCave PIR
+GPIO.setup(24, GPIO.IN) # Zone4
+GPIO.setup(23, GPIO.IN) # Zone5
 GPIO.setup(22, GPIO.OUT) # Red LED 
 GPIO.setup(21, GPIO.OUT) # internal buzzer
 GPIO.setup(4, GPIO.OUT) # Green LED
@@ -161,7 +159,7 @@ try:
           ua = pref1 # Entry Timer
           ub = pref2 # Exit Timer
           uc = pref3 # Duration of alarm
-          ud = pref4
+          ud = pref4 # Entry/Exit Zones
           ue = pref5
           uf = pref6
           ug = pref7
@@ -281,10 +279,13 @@ try:
             ab = 1
         elif ab == int(1):
             print ("door sensor")
-            ee=1
             cursor.execute("INSERT into events SET sensor='Door Sensor'")
             mariadb_connection.commit()
             ab=0
+            if ud > 0: # Zone 1 always will be an Entry/Exit delay.
+                ee=1
+            else:
+                ac=1 # Here for good measure.
             sleep(0.2)
 
         if (GPIO.input(1) == 0) and eme  == int(1):
@@ -301,10 +302,13 @@ try:
             ad = 1
         elif ad == int(1):
             print ("kitchen pir")
-            ee=1
             cursor.execute("INSERT into events SET sensor='Kitchen Sensor'")
             mariadb_connection.commit()
             ad=0
+            if ud > 1: # Zone 2 Entry/Exit delay.
+                ee=1
+            else:
+                ac=1
             sleep(0.2)
 
         if (GPIO.input(7) == 0) & eme == int(1):
@@ -321,10 +325,13 @@ try:
             ae = 1
         elif ae == int(1):
             print ("living room pir")
-            ac=1
             cursor.execute("INSERT into events SET sensor='Living Room PIR'")
             mariadb_connection.commit()   
             ae = 0
+            if ud > 2: # Zone 3 Entry Exit?
+                ee=1
+            else:
+                ac=1
             sleep(0.2)            
 
         if (GPIO.input(8) == 0) & eme == int(1):
@@ -341,10 +348,13 @@ try:
             ah = 1
         elif ah == int(1):
             print ("bed room pir")
-            ac=1
             cursor.execute("INSERT into events SET sensor='Bed Room PIR'")
             mariadb_connection.commit()
             ah = 0
+            if ud > 3: # Zone 4 Entry/Exit?
+                ee=1
+            else:
+                ac=1
             sleep(0.2)
 
         if (GPIO.input(24) == 0) & eme == int(1):
@@ -361,10 +371,13 @@ try:
             ai = 1
         elif ai == int(1):
             print ("mancave pir")
-            ac=1
             cursor.execute("INSERT into events SET sensor='Man cave PIR'")
             mariadb_connection.commit()
             ai = 0
+            if ud > 4: # Zone 5 Entry/Exit?
+                ee=1
+            else:
+                ac=1
             sleep(0.2)
 
         if (GPIO.input(23) == 0) & eme == int(1):
