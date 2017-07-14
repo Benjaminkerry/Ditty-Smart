@@ -153,7 +153,7 @@ try:
 
         if sa == int(0): # Read user prefs
          print ("Checking")
-         mariadb_connection = mariadb.connect(user='root', passwd='6126', db='alarm')
+         mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
          cursor = mariadb_connection.cursor()
          cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
          sleep(0.2) # Have a breath
@@ -170,7 +170,7 @@ try:
           sa = 1 # We don't need to check the User settings for a while.
  
         if check < 2:
-           mariadb_connection = mariadb.connect(user='root', passwd='6126', db='alarm')
+           mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
            cursor = mariadb_connection.cursor()
            cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
            sleep(0.2)
