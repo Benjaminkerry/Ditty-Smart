@@ -3,7 +3,7 @@ import smtplib
 SERVER = "aspmx.l.google.com"
 
 FROM = ""
-TO = [""] # must be a list
+TO = [""] # Enter the email to receive alert.
 CC = [""]
 
 SUBJECT = "ALARM"
