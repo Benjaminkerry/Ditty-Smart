@@ -202,39 +202,32 @@ try:
            for pir1, pir2, pir3, pir4, pir5, pir6, pir7, pir8 in cursor: 
              if pir1 == int(1.00): # Zone 1 selected
               pa=1
-              oa=1
 
              if pir2 == int(1.00): # Zone 2 selected 
               pb=1
-              oa=1
 
              if pir3 == int(1.00): # Zone 3 selected 
               pc=1
-              oa=1
 
              if pir4 == int(1.00): # Zone 4 selected
               pd=1
-              oa=1
 
              if pir5 == int(1.00): # Zone 5 selected 
               pe=1
-              oa=1
 
              if pir6 == int(1.00): # Zone 6 selected
               pf=1
-              oa=1
 
              if pir7 == int(1.00): # Zone 7 selected
               pg=1
-              oa=1
 
              if pir8 == int(1.00): # Zone 8 selected
               ph=1
-              oa=1
 
         if ar == int(1): #Set alarm clear database!
          cursor.execute("UPDATE pir SET pir1=0,pir2=0,pir3=0,pir4=0,pir5=0,pir6=0,pir7=0,pir8=0 WHERE id=4") # Reset state to 0
          mariadb_connection.commit()     
+         oa=1
          ar=0
 		
         if alarm == int(0) and aj == int(0):
