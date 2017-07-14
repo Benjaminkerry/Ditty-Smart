@@ -1,4 +1,4 @@
-# Dity the enforcer - Thanks Pete.
+# Dity the enforcer Ver0.3 - Thanks Pete.
 # Written by James Colderwood - james@colderwood.com.
 # OpenSource Smart alarm system project.
 import RPi.GPIO as GPIO # import the GPIO library
@@ -81,7 +81,7 @@ GPIO.setup(25, GPIO.IN)
 GPIO.setup(24, GPIO.IN)
 GPIO.setup(23, GPIO.IN)
 GPIO.setup(22, GPIO.OUT)
-GPIO.setup(21, GPIO.OUT)
+GPIO.setup(21, GPIO.OUT) # internal buzzer
 GPIO.setup(4, GPIO.OUT)
 GPIO.setup(5, GPIO.OUT)
 GPIO.setup(6, GPIO.OUT)
@@ -90,7 +90,7 @@ GPIO.output(22,0)
 GPIO.output(4,0)
 GPIO.output(5,0)
 GPIO.output(6,0)
-GPIO.output(21,0)
+GPIO.output(21,0) # internal buzzer 
 
 ## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
 ## while True:
@@ -102,22 +102,22 @@ GPIO.output(21,0)
 ##            user_input = int(input('Try again: '))
 
 try:  
-      while True:            # this will carry on until you hit CTRL+C  
-        if var == int(1): # if port 25 == 1  
-            GPIO.output(22, 1)         # set port/pin value to 1/HIGH/True
+      while True:
+        if var == int(1): 
+            GPIO.output(22, 1)     
             GPIO.output(4,0)
             ed=1
             check = check -1
             sleep(0.3)
         elif omit == int(1): # If user selects omit.
-            GPIO.output(22, 1)         # set port/pin value to 1/HIGH/True
+            GPIO.output(22, 1)         
             GPIO.output(4,0)
             aq=1
             check = check -1
             sleep(0.3)
             walktime = walktime -1
         else:  
-            GPIO.output(22, 0)         # set port/pin value to 0/LOW/False  
+            GPIO.output(22, 0)   
             GPIO.output(4,1)
             GPIO.output(21,0)
             GPIO.output(5,0)
