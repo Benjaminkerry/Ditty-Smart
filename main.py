@@ -64,8 +64,8 @@ ux = 0 # userselect feature 23
 uy = 0 # userselect feature 24
 uz = 0 # userselect feature 25
 var = 0 # alarm mode
-edd = 0
-edt = 0
+edd = 0 # alarm state
+edt = 0 # exit counter
 omit = 0 # check to see if omit function is being used?
 eme = 0 # Email / Alarm state
 check = 2 # check SQL database
@@ -74,27 +74,27 @@ walktime = 20 # walk timer reset
 panel = 0
 modeset = 0
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(7, GPIO.IN)
-GPIO.setup(1, GPIO.IN)
-GPIO.setup(8, GPIO.IN)
-GPIO.setup(25, GPIO.IN)
-GPIO.setup(24, GPIO.IN)
-GPIO.setup(23, GPIO.IN)
-GPIO.setup(22, GPIO.OUT)
+GPIO.setup(7, GPIO.IN) # Kitchen PIR
+GPIO.setup(1, GPIO.IN) # Door PIR
+GPIO.setup(8, GPIO.IN) # Living room PIR
+GPIO.setup(25, GPIO.IN) # Tamper
+GPIO.setup(24, GPIO.IN) # Bedroom PIR
+GPIO.setup(23, GPIO.IN) # ManCave PIR
+GPIO.setup(22, GPIO.OUT) # Red LED 
 GPIO.setup(21, GPIO.OUT) # internal buzzer
-GPIO.setup(4, GPIO.OUT)
-GPIO.setup(5, GPIO.OUT)
-GPIO.setup(6, GPIO.OUT)
+GPIO.setup(4, GPIO.OUT) # Green LED
+GPIO.setup(5, GPIO.OUT) # Second ALARM LED
+GPIO.setup(6, GPIO.OUT) # Second LED R/G/O
 
-GPIO.output(22,0)
-GPIO.output(4,0)
-GPIO.output(5,0)
-GPIO.output(6,0)
+GPIO.output(22,0) # Off
+GPIO.output(4,0) # Off
+GPIO.output(5,0) # Off
+GPIO.output(6,0) # Off
 GPIO.output(21,0) # internal buzzer 
 
 ## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
 ## while True:
-##        if user_input == int(6126):
+##        if user_input == int(1234):
 ##            print ("SET")
 ##            alarm=1
 ##            break
@@ -103,7 +103,7 @@ GPIO.output(21,0) # internal buzzer
 
 try:  
       while True:
-        if var == int(1): 
+        if var == int(1): # Full set
             GPIO.output(22, 1)     
             GPIO.output(4,0)
             ed=1
@@ -116,7 +116,7 @@ try:
             check = check -1
             sleep(0.3)
             walktime = walktime -1
-        else:  
+        else:  # Unset mode
             GPIO.output(22, 0)   
             GPIO.output(4,1)
             GPIO.output(21,0)
