@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO # import the GPIO library
 import os # import the os library
 import MySQLdb as mariadb # import mysql MariaDB library
 from time import sleep # import sleep from time library
+from twilio.rest import Client
 alarm = 0 # alarm setmode
 ac = 0 # alarm state
 ab = 0 # door sensor state
@@ -26,6 +27,8 @@ ar = 0 # clear omit database bit
 et = 10 # entry timer
 ee = 0  # count down state
 ed = 0 # alarm setter
+ma = 1 # Text message status
+ms = 0 # Text message counter
 oa = 0 # part alarm bit
 pa = 0 # Zone 1 selector
 pb = 0 # Zone 2 selector
@@ -71,6 +74,9 @@ wreck = 1 # timer to check user prefs
 walktime = 20 # walk timer reset
 panel = 0
 modeset = 0
+account_sid = "" # Your Twilio account SID
+auth_token = "" # Your Auth Token
+client = Client(account_sid, auth_token)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(7, GPIO.IN) # Zone2
 GPIO.setup(1, GPIO.IN) # Zone1
@@ -130,6 +136,8 @@ try:
             edd=1
             ed=0
             aq=0 # Reset omit status
+            ms=0 # Reset text message
+            ma=1 # Set ready to send message when set.
             pa=0 # Zone reset
             pb=0 # Zone reset
             pc=0 # Zone reset
@@ -409,9 +417,12 @@ try:
             os.system('python3 mail.py')
             cursor.execute("INSERT into events SET sensor='Email Sent'")
             mariadb_connection.commit()
+            ms=1
+            ma=1
 
         if ac == int(1):
             print ("alarm!!!!!!")
+            msg="ALARM"
             GPIO.output(21,1)
             GPIO.output(5,0)
             GPIO.output(6,1)
@@ -421,7 +432,6 @@ try:
             sleep(0.5)
             uc = uc -1 # start alarm sounder count down
             check = check -5
-
             if uc < 5: # If alarm timeout is reached silence the alarm
              print ("Alarm TimeOut") # Show status in console
              cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
@@ -429,6 +439,7 @@ try:
              GPIO.output(21,0) # Internal Buzzer off
              ac=0 # Turn the alarm off
              sa=0 # Get user settings from database.
+             eme=1 # Reset email + Test message bit
              et=ua
             
         if (GPIO.input(25) == 0):
@@ -451,6 +462,15 @@ try:
             sleep(0.3)
             GPIO.output(5,1)
             GPIO.output(6,0)
+
+        if ms == int(1) and ma == int(1):
+           client.messages.create(
+            to="+447500894608",
+            from_="", # Your Twilio number
+            body=msg
+            )
+           ms=0
+           ma=0
 
 finally:                   # this block will run no matter how the try block exits  
     GPIO.cleanup()         # clean up after yourself
