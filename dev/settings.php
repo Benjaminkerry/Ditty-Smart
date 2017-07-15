@@ -214,6 +214,7 @@ echo $pa;
                              </div>
                             <div class="panel-body">
                             <?php include('userpref.php'); ?>   
+                            <?php include('entryexit.php'); ?>
                             </div>
                         </div>
                     </div>
@@ -223,6 +224,7 @@ echo $pa;
                                 <h3 class="panel-title"><i class="fa fa-money fa-fw"></i>Current Settings</h3>
                             </div>
                                 <?php include('showsettings.php'); ?>
+                                <?php include('showentryzones.php');?>
                                     <div class="text-right">
                                     <a href=""><i class="fa fa-arrow-circle-right"></i></a>
                                 </div>
