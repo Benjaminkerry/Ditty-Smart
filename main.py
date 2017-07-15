@@ -465,7 +465,7 @@ try:
 
         if ms == int(1) and ma == int(1):
            client.messages.create(
-            to="+447500894608",
+            to="", # Your MOB number
             from_="", # Your Twilio number
             body=msg
             )
