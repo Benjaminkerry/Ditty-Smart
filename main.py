@@ -17,13 +17,19 @@ ah = 0 # bedroom state
 ai = 0 # mancave state
 aj = 0 # alarm off state
 ak = 0 # door sensor walk state
-al = 0 # check the walk database bit
+al = 1 # check the walk database bit
 am = 0 # kitchen sensor walk state
 an = 0 # living sensor walk state
 ao = 0 # bedroom sensor walk state
 ap = 0 # mancave sensor walk state
 aq = 0 # Used to set omit info
 ar = 0 # clear omit database bit
+at = 0 # Zone 6 state
+au = 0 # Zone 6 Walk state
+av = 0 # Zone 7 state
+aw = 0 # Zone 7 walk state
+ax = 0 # Zone 8 state
+ay = 0 # Zone 8 walk state
 et = 10 # entry timer
 ee = 0  # count down state
 ed = 0 # alarm setter
@@ -74,18 +80,24 @@ wreck = 1 # timer to check user prefs
 walktime = 20 # walk timer reset
 panel = 0
 modeset = 0
-account_sid = "" # Your Twilio account SID
-auth_token = "" # Your Auth Token
+account_sid = ""
+auth_token = ""
 client = Client(account_sid, auth_token)
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(7, GPIO.IN) # Zone2
-GPIO.setup(1, GPIO.IN) # Zone1
-GPIO.setup(8, GPIO.IN) # Zone3
-GPIO.setup(25, GPIO.IN) # Tamper
-GPIO.setup(24, GPIO.IN) # Zone4
-GPIO.setup(23, GPIO.IN) # Zone5
+GPIO.setup(7, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone2
+GPIO.setup(1, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone1
+GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone3
+GPIO.setup(25, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Tamper
+GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone4
+GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone5
+GPIO.setup(20, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone6
+GPIO.setup(16, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone 7
+GPIO.setup(12, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone 8
 GPIO.setup(22, GPIO.OUT) # Red LED 
 GPIO.setup(21, GPIO.OUT) # internal buzzer
+GPIO.setup(26, GPIO.OUT) # Strobe
+GPIO.setup(19, GPIO.OUT) # BELLBOX
+GPIO.setup(13, GPIO.OUT) # Internal Siren
 GPIO.setup(4, GPIO.OUT) # Green LED
 GPIO.setup(5, GPIO.OUT) # Second ALARM LED
 GPIO.setup(6, GPIO.OUT) # Second LED R/G/O
@@ -95,6 +107,10 @@ GPIO.output(4,0) # Off
 GPIO.output(5,0) # Off
 GPIO.output(6,0) # Off
 GPIO.output(21,0) # internal buzzer 
+GPIO.output(26,1) # Strobe
+GPIO.output(19,1) # BELLBOX
+GPIO.output(13,0) # Internal siren
+
 
 ## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
 ## while True:
@@ -125,6 +141,9 @@ try:
             GPIO.output(4,1)
             GPIO.output(21,0)
             GPIO.output(5,0)
+            GPIO.output(26,1) # Strobe
+            GPIO.output(19,1) # BELLBOX
+            GPIO.output(13,0) # Internal siren
             alarm=0
             ac=0
             ab=0
@@ -398,6 +417,76 @@ try:
             walktime=20
             sleep(0.2)
 
+        if (GPIO.input(20) == 0) & alarm == int(1) or (GPIO.input(20) == 0) and pf == int(1):
+            at = 1
+        elif at == int(1):
+            print ("UP HALL")
+            cursor.execute("INSERT into events SET sensor='UP HALL'")
+            mariadb_connection.commit()
+            at = 0
+            if ud > 5: # Zone 6 Entry/Exit?
+                ee=1
+            else:
+                ac=1
+            sleep(0.2)
+
+        if (GPIO.input(20) == 0) & eme == int(1):
+            au = 1
+        elif au == int(1):
+            cursor.execute("UPDATE pir SET pir6=1 WHERE id=3")
+            mariadb_connection.commit()
+            au=0
+            al=1
+            walktime=20
+            sleep(0.2)
+
+        if (GPIO.input(16) == 0) & alarm == int(1) or (GPIO.input(16) == 0) and pg == int(1):
+            av = 1
+        elif av == int(1):
+            print ("Zone7")
+            cursor.execute("INSERT into events SET sensor='Zone7'")
+            mariadb_connection.commit()
+            av = 0
+            if ud > 6: # Zone 7 Entry/Exit?
+                ee=1
+            else:
+                ac=1
+            sleep(0.2)
+            
+        if (GPIO.input(16) == 0) & eme == int(1):
+            aw = 1
+        elif aw == int(1):
+            cursor.execute("UPDATE pir SET pir7=1 WHERE id=3")
+            mariadb_connection.commit()
+            aw=0 
+            al=1
+            walktime=20
+            sleep(0.2)
+
+        if (GPIO.input(12) == 0) & alarm == int(1) or (GPIO.input(12) == 0) and ph == int(1):
+            ax = 1
+        elif ax == int(1):
+            print ("Zone8")
+            cursor.execute("INSERT into events SET sensor='Zone8'")
+            mariadb_connection.commit()
+            ax = 0
+            if ud > 7: # Zone 8 Entry/Exit?
+                ee=1
+            else:
+                ac=1
+            sleep(0.2)
+
+        if (GPIO.input(12) == 0) & eme == int(1):
+            ay = 1
+        elif ay == int(1):
+            cursor.execute("UPDATE pir SET pir8=1 WHERE id=3")
+            mariadb_connection.commit()
+            ay=0
+            al=1
+            walktime=20
+            sleep(0.2)
+
+
         if ee == int(1) and aj == int(0): # Entry Timer
             et = et -1
             sleep(0.5)
@@ -426,6 +515,9 @@ try:
             GPIO.output(21,1)
             GPIO.output(5,0)
             GPIO.output(6,1)
+            GPIO.output(26,0) # Strobe on
+            GPIO.output(19,0) # BELLBOX
+            GPIO.output(13,1) # Internal siren
             sleep(0.5)
             GPIO.output(5,1)
             GPIO.output(6,0)
@@ -437,14 +529,16 @@ try:
              cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
              mariadb_connection.commit()
              GPIO.output(21,0) # Internal Buzzer off
+             GPIO.output(19,1) # BELLBOX
+             GPIO.output(13,0) # Internal siren
              ac=0 # Turn the alarm off
              sa=0 # Get user settings from database.
              eme=1 # Reset email + Test message bit
              et=ua
             
-        if (GPIO.input(25) == 0):
-            af = 1
-        elif af == int(1):
+        if (GPIO.input(25) == 1):
+##            af = 1
+##        elif af == int(1):
             print ("TAMPER")
             ac=1
             ag=1
@@ -452,7 +546,7 @@ try:
             GPIO.output(6,0)
             cursor.execute("INSERT into events SET sensor='TAMPER'")
             mariadb_connection.commit()
-            af = 0
+##            af = 0
             sleep(0.5)
 
         if ag == int(1):
@@ -465,8 +559,8 @@ try:
 
         if ms == int(1) and ma == int(1):
            client.messages.create(
-            to="", # Your MOB number
-            from_="", # Your Twilio number
+            to="",
+            from_="",
             body=msg
             )
            ms=0
