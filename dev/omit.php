@@ -34,6 +34,18 @@ echo '<select name="item4">';
 echo '<option value="0">Off</option>';
 echo '<option value="1">ManCave</option>';
 echo '</select>';
+echo '<select name="item5">';
+echo '<option value="0">Off</option>';
+echo '<option value="1">UP HALL</option>';
+echo '</select>';
+echo '<select name="item6">';
+echo '<option value="0">Off</option>';
+echo '<option value="1">Zone7</option>';
+echo '</select>';
+echo '<select name="item7">';
+echo '<option value="0">Off</option>';
+echo '<option value="1">Zone8</option>';
+echo '</select>';
 echo ' <button type="submit" name="submit" value="Go!" class="btn btn-default">Part!</button>';
 echo '</form>';
 } 

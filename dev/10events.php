@@ -1,15 +1,20 @@
-<div class="panel-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Event ID</th>
-                                                <th>Event</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                           <?php
+<?php
+require ('ul.php');
+
+if (login_check($mysqli) == true)
+{
+echo '<div class="panel-body">';
+                                echo '<div class="table-responsive">';
+                                    echo '<table class="table table-bordered table-hover table-striped">';
+                                       echo '<thead>';
+                                            echo '<tr>';
+                                               echo '<th>Event ID</th>';
+                                             echo   '<th>Event</th>';
+                                              echo  '<th>Date</th>';
+                                            echo '</tr>';
+                                      echo  '</thead>';
+                                        echo '<tbody>';
+                                           
                                   include('../connector.php');
                                   $sql = "SELECT id, date, sensor , time  FROM events ORDER BY id DESC LIMIT 10";
                                   $results = mysqli_query($mysqli,$sql);
@@ -20,8 +25,13 @@
                                   echo "<td>" . $rowitem['time'] . "</td>";
                                   echo "</tr>";
                                                                   }
-                                  ?>
+                                  
 
-</tbody>
-                                    </table>
-                                </div>
+echo '</tbody>';
+                                echo '</table>';
+                               echo  '</div>';
+}
+else
+{
+echo "NO";
+}
