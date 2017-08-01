@@ -149,6 +149,9 @@ try:
             ab=0
             ad=0
             ae=0
+            ah=0
+            ai=0
+            at=0
             et=ua
             ee=0
             eme=1
@@ -419,7 +422,7 @@ try:
 
         if (GPIO.input(20) == 0) & alarm == int(1) or (GPIO.input(20) == 0) and pf == int(1):
             at = 1
-        elif at == int(1):
+        elif at == int(1)
             print ("UP HALL")
             cursor.execute("INSERT into events SET sensor='UP HALL'")
             mariadb_connection.commit()
@@ -491,14 +494,19 @@ try:
             et = et -1
             sleep(0.5)
             GPIO.output(22, 0)
-            GPIO.output(21,1)
+#            GPIO.output(21,1)
             sleep(0.4)
-            GPIO.output(21,0)
+#            GPIO.output(21,0)
             print (et)     
             check = check -10
         if et < 1:
             ac=1
             ee=0
+
+        if et == 20:
+           GPIO.output(13,1)
+           sleep(0.01)
+           GPIO.output(13,0) 
 
         if eme == int(1) & ac == int(1):
             eme=0 
