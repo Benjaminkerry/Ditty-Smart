@@ -422,7 +422,7 @@ try:
 
         if (GPIO.input(20) == 0) & alarm == int(1) or (GPIO.input(20) == 0) and pf == int(1):
             at = 1
-        elif at == int(1)
+        elif at == int(1):
             print ("UP HALL")
             cursor.execute("INSERT into events SET sensor='UP HALL'")
             mariadb_connection.commit()
