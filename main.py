@@ -110,7 +110,8 @@ GPIO.output(21,0) # internal buzzer
 GPIO.output(26,1) # Strobe
 GPIO.output(19,1) # BELLBOX
 GPIO.output(13,0) # Internal siren
-
+mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
+cursor = mariadb_connection.cursor()
 
 ## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
 ## while True:
@@ -121,7 +122,75 @@ GPIO.output(13,0) # Internal siren
 ##        else:
 ##            user_input = int(input('Try again: '))
 
-try:  
+def alarms():
+      global msg
+      print ("alarm!!!!!!")
+      msg="ALARM"
+      sleep(0.2)
+      GPIO.output(21,1)
+      GPIO.output(5,0)
+      GPIO.output(6,1)
+      GPIO.output(26,0) # Strobe on
+#      GPIO.output(19,0) # BELLBOX
+#      GPIO.output(13,1) # Internal siren
+      GPIO.output(5,1)
+      GPIO.output(6,0)
+      print(check)
+
+def alarmtime():
+      global cursor,ac,sa,eme,et,ua
+      print ("Alarm TimeOut") # Show status in console
+      cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
+      mariadb_connection.commit()
+      GPIO.output(21,0) # Internal Buzzer off
+      GPIO.output(19,1) # BELLBOX
+      GPIO.output(13,0) # Internal siren
+      ac=0 # Turn the alarm off
+      sa=0 # Get user settings from database.
+      eme=1 # Reset email + Test message bit
+      et=ua
+
+def statuscheck():
+      global ua,ub,uc,ud,ue,uf,ug,uh,edt,sa,mariadb_connection,cursor
+      print ("Checking")
+      cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
+      sleep(0.2) # Have a breath
+      for pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 in cursor:
+       ua = pref1 # Entry Timer
+       ub = pref2 # Exit Timer
+       uc = pref3 # Duration of alarm
+       ud = pref4 # Entry/Exit Zones
+       ue = pref5
+       uf = pref6
+       ug = pref7
+       uh = pref8
+       edt = ub # Set exit value
+       sa = 1 # We don't need to check the User settings for a while.
+
+def alarmmode():
+      global var,omit,check,mariadb_connection,cursor
+      cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
+      sleep(0.5)
+      check = 15
+      for panel, modeset in cursor:
+       if panel == int(0.00):
+        var = 0
+       if panel == int(1.00):
+        var = 1
+       if modeset == int(1.00): # check the modeset value.
+        omit = 1
+       else:
+        omit = 0
+
+def alarmunset():
+      global aj,mariadb_connection,cursor
+      print ("Alarm UNSET")
+      cursor.execute("INSERT into events SET sensor='ALARM UNSET'")
+      mariadb_connection.commit()
+      sleep(0.2)
+      aj=1
+
+try:
       while True:
         if var == int(1): # Full set
             GPIO.output(22, 1)     
@@ -180,38 +249,10 @@ try:
          wreck = 500
 
         if sa == int(0): # Read user prefs
-         print ("Checking")
-         mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
-         cursor = mariadb_connection.cursor()
-         cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
-         sleep(0.2) # Have a breath
-         for pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 in cursor:
-          ua = pref1 # Entry Timer
-          ub = pref2 # Exit Timer
-          uc = pref3 # Duration of alarm
-          ud = pref4 # Entry/Exit Zones
-          ue = pref5
-          uf = pref6
-          ug = pref7
-          uh = pref8
-          edt = ub # Set exit value
-          sa = 1 # We don't need to check the User settings for a while.
+         statuscheck()
  
         if check < 2:
-           mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
-           cursor = mariadb_connection.cursor()
-           cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
-           sleep(0.2)
-           check = 15
-           for panel, modeset in cursor:
-             if panel == int(0.00):
-              var = 0
-             if panel == int(1.00):
-              var = 1
-             if modeset == int(1.00): # check the modeset value.
-              omit = 1
-             else:
-              omit = 0
+         alarmmode()
 
         if walktime < 2 and al == int(1):
            cursor.execute("UPDATE pir SET pir1=0,pir2=0,pir3=0,pir4=0,pir5=0,pir6=0,pir7=0,pir8=0 WHERE id=3")
@@ -259,11 +300,7 @@ try:
          ar=0
 		
         if alarm == int(0) and aj == int(0):
-            print ("Alarm UNSET")
-            cursor.execute("INSERT into events SET sensor='ALARM UNSET'")
-            mariadb_connection.commit()
-            sleep(0.2)
-            aj=1
+            alarmunset()
 
         if oa == int(1):
             edt = edt -1
@@ -518,31 +555,12 @@ try:
             ma=1
 
         if ac == int(1):
-            print ("alarm!!!!!!")
-            msg="ALARM"
-            GPIO.output(21,1)
-            GPIO.output(5,0)
-            GPIO.output(6,1)
-            GPIO.output(26,0) # Strobe on
-            GPIO.output(19,0) # BELLBOX
-            GPIO.output(13,1) # Internal siren
-            sleep(0.5)
-            GPIO.output(5,1)
-            GPIO.output(6,0)
-            sleep(0.5)
+            alarms()
             uc = uc -1 # start alarm sounder count down
             check = check -5
             if uc < 5: # If alarm timeout is reached silence the alarm
-             print ("Alarm TimeOut") # Show status in console
-             cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
-             mariadb_connection.commit()
-             GPIO.output(21,0) # Internal Buzzer off
-             GPIO.output(19,1) # BELLBOX
-             GPIO.output(13,0) # Internal siren
-             ac=0 # Turn the alarm off
-             sa=0 # Get user settings from database.
-             eme=1 # Reset email + Test message bit
-             et=ua
+             alarmtime()
+
             
         if (GPIO.input(25) == 1):
 ##            af = 1
@@ -566,11 +584,11 @@ try:
             GPIO.output(6,0)
 
         if ms == int(1) and ma == int(1):
-           client.messages.create(
-            to="",
-            from_="",
-            body=msg
-            )
+##           client.messages.create(
+##            to="",
+##            from_="",
+##            body=msg
+##            )
            ms=0
            ma=0
 
