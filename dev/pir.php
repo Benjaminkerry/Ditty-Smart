@@ -55,10 +55,10 @@ echo "ManCave";
 echo "<img src=$pe>";
 echo "UP HALL";
 echo "<img src=$pf>";
-echo "Zone7";
-echo "<img src=$pg>";
-echo "Zone8";
-echo "<img src=$ph>";
-echo "</body>";
-echo "</html>";
+//echo "Zone7";
+//echo "<img src=$pg>";
+//echo "Zone8";
+//echo "<img src=$ph>";
+//echo "</body>";
+//echo "</html>";
 ?>

@@ -291,8 +291,6 @@ include('omit.php');
                                 <h3 class="panel-title"><i class="fa fa-money fa-fw"></i> Last 10 events</h3>
                             </div>
                                 <?php
-if (login_check($mysqli) == true)
-{
 echo '<div class="panel-body">';
                                 echo '<div class="table-responsive">';
                                     echo '<table class="table table-bordered table-hover table-striped">';
@@ -305,7 +303,7 @@ echo '<div class="panel-body">';
                                       echo  '</thead>';
                                         echo '<tbody>';
                                            
-                                  include('../connector.php');
+                                  include('connector.php');
                                   $sql = "SELECT id, date, sensor , time  FROM events ORDER BY id DESC LIMIT 10";
                                   $results = mysqli_query($mysqli,$sql);
                                   while($rowitem = mysqli_fetch_array($results)) {
@@ -320,11 +318,6 @@ echo '<div class="panel-body">';
 echo '</tbody>';
                                 echo '</table>';
                                echo  '</div>';
-}
-else
-{
-echo "NO";
-}
 ?>
                                     <div class="text-right">
                                     <a href="tables.php">View Last 500 events <i class="fa fa-arrow-circle-right"></i></a>

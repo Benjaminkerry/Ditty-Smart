@@ -1,8 +1,4 @@
 <?php
-require ('ul.php');
-
-if (login_check($mysqli) == true)
-{
 echo '<div class="panel-body">';
                                 echo '<div class="table-responsive">';
                                     echo '<table class="table table-bordered table-hover table-striped">';
@@ -30,8 +26,3 @@ echo '<div class="panel-body">';
 echo '</tbody>';
                                 echo '</table>';
                                echo  '</div>';
-}
-else
-{
-echo "NO";
-}

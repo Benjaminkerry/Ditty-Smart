@@ -163,7 +163,7 @@ include('alerts.php');
                                 </thead>
                                 <tbody>
                                  <?php
-                                  include('../connector.php');
+                                  include('connector.php');
                                   $sql = "SELECT id, date, sensor , time  FROM events ORDER BY id DESC LIMIT 500";
                                   $results = mysqli_query($mysqli,$sql);
                                   while($rowitem = mysqli_fetch_array($results)) {
