@@ -1,9 +1,12 @@
-# Dity the enforcer Ver0.3 - Thanks Pete.
+# Dity the enforcer Ver0.4 - Thanks Pete.
 # Written by James Colderwood - james@colderwood.com.
 # OpenSource Smart alarm system project.
 import RPi.GPIO as GPIO # import the GPIO library
 import os # import the os library
 import MySQLdb as mariadb # import mysql MariaDB library
+import nest # import the nest library
+import sys # import the system library
+import urllib2 # import URLLib Library
 from time import sleep # import sleep from time library
 from twilio.rest import Client
 alarm = 0 # alarm setmode
@@ -75,15 +78,19 @@ edd = 0 # alarm state
 edt = 0 # exit counter
 omit = 0 # check to see if omit function is being used?
 eme = 0 # Email / Alarm state
-check = 2 # check SQL database
+check = 5 # check SQL database
 wreck = 1 # timer to check user prefs
-walktime = 20 # walk timer reset
-panel = 0
-modeset = 0
-account_sid = ""
-auth_token = ""
-client = Client(account_sid, auth_token)
-GPIO.setmode(GPIO.BCM)
+walktime = 6 # walk timer reset
+panel = 0 # Panel mode
+modeset = 0 # omit mode
+account_sid = "" # Twilio SID key
+auth_token = "" # Twilio Auth token
+client = Client(account_sid, auth_token) # define client
+client_id = '' # NEST Developer client ID
+client_secret = '' # NEST Developer client secret
+access_token_cache_file = 'nest.json' # Cache file for NEST.
+napi = nest.Nest(client_id=client_id, client_secret=client_secret, access_token_cache_file=access_token_cache_file) # define napi
+GPIO.setmode(GPIO.BCM) # Set board PIN mode.
 GPIO.setup(7, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone2
 GPIO.setup(1, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone1
 GPIO.setup(8, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone3
@@ -110,8 +117,8 @@ GPIO.output(21,0) # internal buzzer
 GPIO.output(26,1) # Strobe
 GPIO.output(19,1) # BELLBOX
 GPIO.output(13,0) # Internal siren
-mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm')
-cursor = mariadb_connection.cursor()
+mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm') # MySQL Database details
+cursor = mariadb_connection.cursor() # define cursor
 
 ## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
 ## while True:
@@ -122,22 +129,80 @@ cursor = mariadb_connection.cursor()
 ##        else:
 ##            user_input = int(input('Try again: '))
 
-def alarms():
+def fullset(): # Alarm is set
+      global ed,check
+      GPIO.output(22, 1)     
+      GPIO.output(4,0)
+      ed=1
+      check = check -1
+      sleep(1)
+      print check    
+  
+def omitset(): # Alarm is partset
+      global aq,check,walktime
+      GPIO.output(22, 1)         
+      GPIO.output(4,0)
+      aq=1
+      check = check -1
+      sleep(1)
+      walktime = walktime -1
+      
+def unset(): # Alarm is not set
+      global alarm,ac,ab,ad,ae,ah,ai,at,et,ua,ee,eme,edd,ed,aq,ms,ma,pa,pb,pc,pd,pe,pf,pg,ph,var,omit,wreck,check,walktime
+      GPIO.output(22, 0)   
+      GPIO.output(4,1)
+      GPIO.output(21,0)
+      GPIO.output(5,0)
+      GPIO.output(26,1) # Strobe
+      GPIO.output(19,1) # BELLBOX
+      GPIO.output(13,0) # Internal siren
+      alarm=0
+      ac=0
+      ab=0
+      ad=0
+      ae=0
+      ah=0
+      ai=0
+      at=0
+      et=ua
+      ee=0
+      eme=1
+      edd=1
+      ed=0
+      aq=0 # Reset omit status
+      ms=0 # Reset text message
+      ma=1 # Set ready to send message when set.
+      pa=0 # Zone reset
+      pb=0 # Zone reset
+      pc=0 # Zone reset
+      pd=0 # Zone reset
+      pe=0 # Zone reset
+      pf=0 # Zone reset
+      pg=0 # Zone reset
+      ph=0 # Zone reset
+      var=0
+      omit=0
+      wreck = wreck -1
+      check = check -1
+      walktime = walktime -1
+      sleep(1)         # wait 1 seconds
+      print check
+
+def alarms(): # Called when alarm trigger
       global msg
       print ("alarm!!!!!!")
-      msg="ALARM"
+      msg="ALARM" # Text message to be sent.
       sleep(0.2)
       GPIO.output(21,1)
       GPIO.output(5,0)
       GPIO.output(6,1)
       GPIO.output(26,0) # Strobe on
-#      GPIO.output(19,0) # BELLBOX
-#      GPIO.output(13,1) # Internal siren
+      GPIO.output(19,0) # BELLBOX
+      GPIO.output(13,1) # Internal siren
       GPIO.output(5,1)
       GPIO.output(6,0)
-      print(check)
 
-def alarmtime():
+def alarmtime(): # Alarm timeout.
       global cursor,ac,sa,eme,et,ua
       print ("Alarm TimeOut") # Show status in console
       cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
@@ -150,7 +215,7 @@ def alarmtime():
       eme=1 # Reset email + Test message bit
       et=ua
 
-def statuscheck():
+def statuscheck(): # Update the user settings.
       global ua,ub,uc,ud,ue,uf,ug,uh,edt,sa,mariadb_connection,cursor
       print ("Checking")
       cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
@@ -167,11 +232,11 @@ def statuscheck():
        edt = ub # Set exit value
        sa = 1 # We don't need to check the User settings for a while.
 
-def alarmmode():
+def alarmmode(): # Check alarm mode
       global var,omit,check,mariadb_connection,cursor
       cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
       sleep(0.5)
-      check = 15
+      check = 45
       for panel, modeset in cursor:
        if panel == int(0.00):
         var = 0
@@ -181,88 +246,67 @@ def alarmmode():
         omit = 1
        else:
         omit = 0
+      nestcheck()
 
-def alarmunset():
+def alarmunset(): # Alarm unset message
       global aj,mariadb_connection,cursor
       print ("Alarm UNSET")
       cursor.execute("INSERT into events SET sensor='ALARM UNSET'")
       mariadb_connection.commit()
       sleep(0.2)
       aj=1
+      
+def nestcheck(): # NEST API polling
+    global mariadb_connection,cursor
+    try:
+       napi = nest.Nest(client_id=client_id, client_secret=client_secret, access_token_cache_file=access_token_cache_file)
+       print (napi.structures[1].away)
+       if (napi.structures[1].away == "away"):
+            cursor.execute("UPDATE mode SET panel=1 WHERE id=1")
+            mariadb_connection.commit()
+       else:
+             cursor.execute("UPDATE mode SET panel=0 WHERE id=1")
+             mariadb_connection.commit()
+    except:
+         print ("No connection")
+    sleep(0.2)
+      
+if napi.authorization_required: # If there is no cache user will have to enter PIN as per screen instructions
+    print('Go to ' + napi.authorize_url + ' to authorize, then enter PIN below')
+    if sys.version_info[0] < 3:
+        pin = raw_input("PIN: ")
+    else:
+        pin = input("PIN: ")
+    napi.request_token(pin)
 
 try:
       while True:
         if var == int(1): # Full set
-            GPIO.output(22, 1)     
-            GPIO.output(4,0)
-            ed=1
-            check = check -1
-            sleep(0.3)
+            fullset()
         elif omit == int(1): # If user selects omit.
-            GPIO.output(22, 1)         
-            GPIO.output(4,0)
-            aq=1
-            check = check -1
-            sleep(0.3)
-            walktime = walktime -1
+            omitset()
         else:  # Unset mode
-            GPIO.output(22, 0)   
-            GPIO.output(4,1)
-            GPIO.output(21,0)
-            GPIO.output(5,0)
-            GPIO.output(26,1) # Strobe
-            GPIO.output(19,1) # BELLBOX
-            GPIO.output(13,0) # Internal siren
-            alarm=0
-            ac=0
-            ab=0
-            ad=0
-            ae=0
-            ah=0
-            ai=0
-            at=0
-            et=ua
-            ee=0
-            eme=1
-            edd=1
-            ed=0
-            aq=0 # Reset omit status
-            ms=0 # Reset text message
-            ma=1 # Set ready to send message when set.
-            pa=0 # Zone reset
-            pb=0 # Zone reset
-            pc=0 # Zone reset
-            pd=0 # Zone reset
-            pe=0 # Zone reset
-            pf=0 # Zone reset
-            pg=0 # Zone reset
-            ph=0 # Zone reset
-            var=0
-            omit=0
-            wreck = wreck -1
-            check = check -1
-            walktime = walktime -1
-            sleep(0.2)         # wait 0.1 seconds  
+            unset()
  
-        if wreck < 2:
+        if wreck < 2: # User prefs timer
          sa=0
          wreck = 500
 
         if sa == int(0): # Read user prefs
          statuscheck()
  
-        if check < 2:
+        if check < 2: # Check alarm set mode.
          alarmmode()
 
-        if walktime < 2 and al == int(1):
+        if walktime < 2 and al == int(1): # Reset the live PIR display
            cursor.execute("UPDATE pir SET pir1=0,pir2=0,pir3=0,pir4=0,pir5=0,pir6=0,pir7=0,pir8=0 WHERE id=3")
            mariadb_connection.commit()
            sleep(0.2)
            al=0
-           walktime=20
+           walktime=6
 
-        if walktime < 1:
-           walktime=20
+        if walktime < 1: # Can be removed. Here for good measure.
+           walktime=6
 
         if aq == int(1) and alarm == int(0): # Check to see which zones should be set. 
            cursor.execute("SELECT pir1, pir2, pir3, pir4, pir5, pir6, pir7, pir8 FROM pir WHERE id=4") # read the database
@@ -308,7 +352,6 @@ try:
             sleep(0.4)
             GPIO.output(4,1)
             GPIO.output(21,0)
-            sleep(0.5)
             print (edt)
         if edt < 1 and oa == int(1):
             cursor.execute("INSERT into events SET sensor='Part Arm'")
@@ -328,7 +371,6 @@ try:
             sleep(0.4)
             GPIO.output(4,1)
             GPIO.output(21,0)
-            sleep(0.5)
             print (edt)
             ag=0 # reset TAMPER alarm.
         if edt < 1:
@@ -362,7 +404,7 @@ try:
             mariadb_connection.commit()
             ak=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(7) == 0) & alarm == int(1) or (GPIO.input(7) == 0) and pb == int(1):
@@ -385,7 +427,7 @@ try:
             mariadb_connection.commit()
             am=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(8) == 0) & alarm == int(1) or (GPIO.input(8) == 0) and pc == int(1):
@@ -408,7 +450,7 @@ try:
             mariadb_connection.commit()
             an=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(24) == 0) & alarm == int(1) or (GPIO.input(24) == 0) and pd == int(1):
@@ -431,7 +473,7 @@ try:
             mariadb_connection.commit()
             ao=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(23) == 0) & alarm == int(1) or (GPIO.input(23) == 0) and pe == int(1):
@@ -454,7 +496,7 @@ try:
             mariadb_connection.commit()
             ap=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(20) == 0) & alarm == int(1) or (GPIO.input(20) == 0) and pf == int(1):
@@ -477,7 +519,7 @@ try:
             mariadb_connection.commit()
             au=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(16) == 0) & alarm == int(1) or (GPIO.input(16) == 0) and pg == int(1):
@@ -500,7 +542,7 @@ try:
             mariadb_connection.commit()
             aw=0 
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
         if (GPIO.input(12) == 0) & alarm == int(1) or (GPIO.input(12) == 0) and ph == int(1):
@@ -523,7 +565,7 @@ try:
             mariadb_connection.commit()
             ay=0
             al=1
-            walktime=20
+            walktime=6
             sleep(0.2)
 
 
@@ -535,7 +577,7 @@ try:
             sleep(0.4)
 #            GPIO.output(21,0)
             print (et)     
-            check = check -10
+            check = check -8
         if et < 1:
             ac=1
             ee=0
@@ -584,11 +626,11 @@ try:
             GPIO.output(6,0)
 
         if ms == int(1) and ma == int(1):
-##           client.messages.create(
-##            to="",
-##            from_="",
-##            body=msg
-##            )
+           client.messages.create(
+            to="",
+            from_="",
+            body=msg
+            )
            ms=0
            ma=0
 
