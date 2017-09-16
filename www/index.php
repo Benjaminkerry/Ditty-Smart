@@ -454,7 +454,6 @@ else
 echo "The Alarm is currently: ";
 echo $pa;
 }
-echo $pageid;
 ?>
 
                             </li>

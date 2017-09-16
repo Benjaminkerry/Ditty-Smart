@@ -1,3 +1,3 @@
 <?php
-    $mysqli = new mysqli("localhost", "test", "", "alarm");
+    $mysqli = new mysqli("localhost", "", "", "alarm");
 ?>
