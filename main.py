@@ -2,11 +2,13 @@
 # Written by James Colderwood - james@colderwood.com.
 # OpenSource Smart alarm system project.
 import RPi.GPIO as GPIO # import the GPIO library
+import logbook # import Logbook Library
 import os # import the os library
 import MySQLdb as mariadb # import mysql MariaDB library
 import nest # import the nest library
 import sys # import the system library
 import urllib2 # import URLLib Library
+# import remote # import the remote server connection
 from time import sleep # import sleep from time library
 from twilio.rest import Client
 alarm = 0 # alarm setmode
@@ -90,6 +92,9 @@ client_id = '' # NEST Developer client ID
 client_secret = '' # NEST Developer client secret
 access_token_cache_file = 'nest.json' # Cache file for NEST.
 napi = nest.Nest(client_id=client_id, client_secret=client_secret, access_token_cache_file=access_token_cache_file) # define napi
+logger = logbook.Logger('Ditty Ver 0.4 log')
+log = logbook.FileHandler('ditty.log')
+log.push_application()
 GPIO.setmode(GPIO.BCM) # Set board PIN mode.
 GPIO.setup(7, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone2
 GPIO.setup(1, GPIO.IN, pull_up_down = GPIO.PUD_UP) # Zone1
@@ -190,6 +195,7 @@ def unset(): # Alarm is not set
 
 def alarms(): # Called when alarm trigger
       global msg
+      alarmmode() # Check the alarm is still set
       print ("alarm!!!!!!")
       msg="ALARM" # Text message to be sent.
       sleep(0.2)
@@ -205,6 +211,7 @@ def alarms(): # Called when alarm trigger
 def alarmtime(): # Alarm timeout.
       global cursor,ac,sa,eme,et,ua
       print ("Alarm TimeOut") # Show status in console
+      logger.info('Alarm timeout reached')
       cursor.execute("INSERT into events SET sensor='Alarm TimeOut'") # Write event to database
       mariadb_connection.commit()
       GPIO.output(21,0) # Internal Buzzer off
@@ -217,6 +224,7 @@ def alarmtime(): # Alarm timeout.
 
 def statuscheck(): # Update the user settings.
       global ua,ub,uc,ud,ue,uf,ug,uh,edt,sa,mariadb_connection,cursor
+      logger.info('Check user settings') 
       print ("Checking")
       cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
       sleep(0.2) # Have a breath
@@ -234,6 +242,8 @@ def statuscheck(): # Update the user settings.
 
 def alarmmode(): # Check alarm mode
       global var,omit,check,mariadb_connection,cursor
+      logger.info('Check Alarm Mode')
+      nestcheck()
       cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
       sleep(0.5)
       check = 45
@@ -246,10 +256,10 @@ def alarmmode(): # Check alarm mode
         omit = 1
        else:
         omit = 0
-      nestcheck()
 
 def alarmunset(): # Alarm unset message
       global aj,mariadb_connection,cursor
+      logger.info('Alarm Unset')
       print ("Alarm UNSET")
       cursor.execute("INSERT into events SET sensor='ALARM UNSET'")
       mariadb_connection.commit()
@@ -258,21 +268,26 @@ def alarmunset(): # Alarm unset message
       
 def nestcheck(): # NEST API polling
     global mariadb_connection,cursor
+    logger.info('Nest check')
     try:
        napi = nest.Nest(client_id=client_id, client_secret=client_secret, access_token_cache_file=access_token_cache_file)
        print (napi.structures[1].away)
        if (napi.structures[1].away == "away"):
             cursor.execute("UPDATE mode SET panel=1 WHERE id=1")
             mariadb_connection.commit()
+            logger.info('Nest API - Set Alarm')
        else:
              cursor.execute("UPDATE mode SET panel=0 WHERE id=1")
              mariadb_connection.commit()
+             logger.info('Someone is home')
     except:
          print ("No connection")
+         logger.warn('Unable to connect to Internet for NEST API check')
     sleep(0.2)
       
 if napi.authorization_required: # If there is no cache user will have to enter PIN as per screen instructions
     print('Go to ' + napi.authorize_url + ' to authorize, then enter PIN below')
+    logger.error('Nest requires .json file or password auth')
     if sys.version_info[0] < 3:
         pin = raw_input("PIN: ")
     else:
@@ -357,6 +372,7 @@ try:
             cursor.execute("INSERT into events SET sensor='Part Arm'")
             mariadb_connection.commit()
             print ("Part Arm")
+            logger.info('System is Partarm')
             walktime = 0
             alarm=2
             edt=ub
@@ -593,6 +609,7 @@ try:
             os.system('python3 mail.py')
             cursor.execute("INSERT into events SET sensor='Email Sent'")
             mariadb_connection.commit()
+            logger.info('The Alarm is sounding')
             ms=1
             ma=1
 
