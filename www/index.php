@@ -116,7 +116,7 @@ function update(){
 }	
 
 function omit(){
-	global $userlog;
+	global $userlog, $mysqli;
 	if ($userlog == (0)){
 		exit();
 	}else{
@@ -232,6 +232,10 @@ switch ($pageid):
 	case "home":
 		continue;
 		break;
+
+	case "omit":
+	      omit();
+              break;
 
 	case "last500":
 		events500();
