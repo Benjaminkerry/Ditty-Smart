@@ -125,15 +125,6 @@ GPIO.output(13,0) # Internal siren
 mariadb_connection = mariadb.connect(user='root', passwd='', db='alarm') # MySQL Database details
 cursor = mariadb_connection.cursor() # define cursor
 
-## user_input = int(input('Enter passcode to set: ')) # will allow user to enter a Pin to run the program. Normally not used.
-## while True:
-##        if user_input == int(1234):
-##            print ("SET")
-##            alarm=1
-##            break
-##        else:
-##            user_input = int(input('Try again: '))
-
 def fullset(): # Alarm is set
       global ed,check
       GPIO.output(22, 1)     
@@ -224,7 +215,6 @@ def alarmtime(): # Alarm timeout.
 
 def statuscheck(): # Update the user settings.
       global ua,ub,uc,ud,ue,uf,ug,uh,edt,sa,mariadb_connection,cursor
-      logger.info('Check user settings') 
       print ("Checking")
       cursor.execute("SELECT pref1, pref2, pref3, pref4, pref5, pref6, pref7, pref8 FROM userpref WHERE id=1") # read user settings.
       sleep(0.2) # Have a breath
@@ -242,7 +232,6 @@ def statuscheck(): # Update the user settings.
 
 def alarmmode(): # Check alarm mode
       global var,omit,check,mariadb_connection,cursor
-      logger.info('Check Alarm Mode')
       nestcheck()
       cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
       sleep(0.5)
@@ -268,7 +257,6 @@ def alarmunset(): # Alarm unset message
       
 def nestcheck(): # NEST API polling
     global mariadb_connection,cursor
-    logger.info('Nest check')
     try:
        napi = nest.Nest(client_id=client_id, client_secret=client_secret, access_token_cache_file=access_token_cache_file)
        print (napi.structures[1].away)
@@ -279,7 +267,6 @@ def nestcheck(): # NEST API polling
        else:
              cursor.execute("UPDATE mode SET panel=0 WHERE id=1")
              mariadb_connection.commit()
-             logger.info('Someone is home')
     except:
          print ("No connection")
          logger.warn('Unable to connect to Internet for NEST API check')
@@ -621,18 +608,18 @@ try:
              alarmtime()
 
             
-        if (GPIO.input(25) == 1):
+##        if (GPIO.input(25) == 1):
 ##            af = 1
 ##        elif af == int(1):
-            print ("TAMPER")
-            ac=1
-            ag=1
-            GPIO.output(5,0)
-            GPIO.output(6,0)
-            cursor.execute("INSERT into events SET sensor='TAMPER'")
-            mariadb_connection.commit()
+##            print ("TAMPER")
+##            ac=1
+##            ag=1
+##            GPIO.output(5,0)
+##            GPIO.output(6,0)
+##            cursor.execute("INSERT into events SET sensor='TAMPER'")
+##            mariadb_connection.commit()
 ##            af = 0
-            sleep(0.5)
+##            sleep(0.5)
 
         if ag == int(1):
             GPIO.output(21,1)
