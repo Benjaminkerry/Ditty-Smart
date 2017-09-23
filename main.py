@@ -232,7 +232,6 @@ def statuscheck(): # Update the user settings.
 
 def alarmmode(): # Check alarm mode
       global var,omit,check,mariadb_connection,cursor
-      nestcheck()
       cursor.execute("SELECT panel, modeset FROM mode WHERE id=1")
       sleep(0.5)
       check = 45
@@ -245,6 +244,7 @@ def alarmmode(): # Check alarm mode
         omit = 1
        else:
         omit = 0
+      nestcheck()
 
 def alarmunset(): # Alarm unset message
       global aj,mariadb_connection,cursor
